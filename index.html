@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Бриллиантовая рука — Угадай перевод</title>
+<style>
+  body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: linear-gradient(135deg, #0a1f44, #051225);
+    color: #fff;
+    text-align: center;
+    min-height: 100vh;
+    padding: 20px;
+  }
+
+  .container {
+    max-width: 720px;
+    margin: 0 auto;
+  }
+
+  h1 {
+    font-size: 32px;
+    margin-bottom: 12px;
+  }
+
+  #infoBox {
+    background: rgba(8,17,34,0.6);
+    padding: 16px;
+    border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+    text-align: left;
+    margin-bottom: 16px;
+  }
+
+  #infoBox strong {
+    display: block;
+    font-size: 20px;
+    margin-bottom: 8px;
+  }
+
+  .carousel {
+    position: relative;
+    width: 100%;
+    max-width: 700px;
+    height: 200px;
+    margin: 16px auto;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 6px 22px rgba(0,0,0,.45);
+  }
+
+  .carousel img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity .8s ease;
+  }
+
+  .carousel img.active {
+    opacity: 1;
+  }
+
+  .controls-row {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 12px;
+  }
+
+  button.btn {
+    appearance: none;
+    cursor: pointer;
+    border: 0;
+    border-radius: 14px;
+    padding: 12px 18px;
+    font-weight: 700;
+    background: #ffb300;
+    color: #072033;
+  }
+
+  /* Language */
+  #languageScreen {
+    max-width: 720px;
+    margin: 0 auto;
+  }
+
+  .lang-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    align-items: center;
+    margin-top: 25px;
+  }
+
+  .lang-buttons button {
+    width: 220px;
+  }
+
+  /* Игра «Угадай перевод» */
+  #gameArea {
+    display: none;
+    margin-top: 20px;
+    min-height: 400px;
+  }
+
+  #levelText {
+    font-size: 20px;
+    margin-bottom: 10px;
+    opacity: 0.9;
+  }
+
+  #word {
+    font-size: 40px;
+    font-weight: bold;
+    margin-bottom: 25px;
+    animation: fadeIn 0.5s ease;
+  }
+
+  #buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 20px;
+    max-width: 380px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .btnAnswer {
+    width: 100%;
+    padding: 16px;
+    font-size: 22px;
+    font-weight: 700;
+    background: rgba(255,255,255,.92);
+    border-radius: 14px;
+    border: none;
+    color: #071a33;
+    box-shadow: 0 6px 14px rgba(0,0,0,.35);
+    transition: .2s;
+  }
+
+  .btnAnswer:active { transform: scale(.97); }
+
+  .correctPop {
+    animation: popCorrect .35s ease;
+    background: #b5ffb5!important;
+  }
+
+  @keyframes popCorrect {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.25); }
+    100% { transform: scale(1); }
+  }
+
+  .wrongShake {
+    animation: shake .4s ease;
+    background: #ffb5b5!important;
+  }
+
+  @keyframes shake {
+    0% { transform: translateX(0) }
+    25% { transform: translateX(-6px) }
+    50% { transform: translateX(6px) }
+    75% { transform: translateX(-6px) }
+    100% { transform: translateX(0) }
+  }
+
+  #message {
+    margin-top: 18px;
+    font-size: 26px;
+    min-height: 36px;
+    font-weight: 700;
+  }
+
+  /* Победа */
+  #winOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: .5s;
+    z-index: 999;
+  }
+
+  #winOverlay.show {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .winBox {
+    background: linear-gradient(135deg,#ffd24d,#ff9f1c);
+    color: #3a2400;
+    padding: 32px 26px;
+    border-radius: 22px;
+    box-shadow: 0 20px 50px rgba(0,0,0,.7);
+    animation: winPop .6s ease;
+    max-width: 320px;
+    width: 90%;
+    text-align: center;
+  }
+
+  @keyframes winPop {
+    0% { transform: scale(.3) rotate(-10deg); opacity:0 }
+    60% { transform: scale(1.1) rotate(4deg); }
+    100% { transform: scale(1) rotate(0); }
+  }
+
+  .winBox h2 { font-size: 36px; margin: 10px 0; }
+  .winBox p { font-size: 20px; margin-bottom: 18px; }
+  .winBox button {
+    background: #3a2400;
+    color: #fff;
+    border: none;
+    border-radius: 14px;
+    padding: 14px 22px;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .crown {
+    font-size: 56px;
+    animation: float 1.8s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%,100% { transform: translateY(0) }
+    50% { transform: translateY(-12px) }
+  }
+</style>
+</head>
+
+<body>
+
+<!-- Выбор языка -->
+<div class="container" id="languageScreen">
+  <h1 id="languageTitle">🌍 Выберите язык</h1>
+  <div class="lang-buttons">
+    <button class="btn" onclick="chooseLanguage('ru')">Русский</button>
+    <button class="btn" onclick="chooseLanguage('en')">English</button>
+    <button class="btn" onclick="chooseLanguage('az')">Azərbaycanca</button>
+  </div>
+</div>
+
+<div class="container" id="mainContent" style="display:none;">
+  <h1 id="mainTitle"></h1>
+
+  <!-- Карусель -->
+  <div class="carousel" id="carousel">
+    <img src="https://ic.pics.livejournal.com/dubikvit/65747770/9230108/9230108_900.jpg" class="active" alt="">
+    <img src="https://images.news.ru/photo/e2ac11dc-2d24-11ee-9d50-02420a0000c9.jpg" alt="">
+    <img src="https://azterra.az/wp-content/uploads/sancy1_32-800x450.jpg" alt="">
+  </div>
+
+  <div id="infoBox">
+    <strong id="infoTitle"></strong>
+    <div id="infoText"></div>
+  </div>
+
+  <div class="controls-row">
+    <button id="readBtn" class="btn"></button>
+    <button id="startBtn" class="btn" style="display:none;"></button>
+  </div>
+</div>
+
+<!-- Игра -->
+<div id="gameArea">
+  <div id="levelText"><span id="levelLabel"></span>: <span id="level">1</span></div>
+  <div id="word">Start</div>
+  <div id="buttons"></div>
+  <div id="message"></div>
+</div>
+
+<!-- Победа -->
+<div id="winOverlay">
+  <div class="winBox">
+    <div class="crown">👑</div>
+    <h2 id="winTitle"></h2>
+    <p id="winText"></p>
+    <button id="playAgainBtn" onclick="location.reload()"></button>
+  </div>
+</div>
+
+<script>
+const translations = {
+  ru: {
+    languageTitle: "🌍 Выберите язык",
+    mainTitle: "Бриллиантовая рука",
+    infoTitle: "Бриллиантовая рука",
+    infoText: `Кафе в Баку получило своё название в честь легендарного советского фильма «Бриллиантовая рука», одной из самых узнаваемых комедий в истории кинематографа.
+
+В 1968 году режиссёр Леонид Гайдай снимал важные сцены этой картины в старом городе Баку — Ичери-шехере. Благодаря своей архитектуре и колориту старый город в фильме изображал «зарубежный» Стамбул.
+
+Место съёмок стало настолько популярным, что в 2017 году на этой улице открылось кафе с названием «Бриллиантовая рука. Чёрт побери» — в память о фильме и его культовом эпизоде.
+
+Интерьер заведения оформлен кадрами и фигурами героев из фильма, а сам фильм часто показывают на экране внутри кафе.
+
+Кафе называется «Бриллиантовая рука», потому что находится рядом с местом, где в Баку снимали знаковую сцену одноимённой советской комедии. Сегодня это место стало популярным туристическим объектом и частью культурной памяти старого Баку.`,
+    readBtn: "Узнать про Бриллиантовую руку",
+    reading: "Читаю...",
+    startBtn: "Начать игру",
+    level: "Уровень",
+    correct: "Правильно! 👍",
+    wrong: "Ошибка 😢",
+    completed: "🎉 Все уровни пройдены!",
+    winTitle: "Победа!",
+    winText: "Ты отлично справился!",
+    playAgain: "Играть снова",
+    speechLang: "ru-RU"
+  },
+
+  en: {
+    languageTitle: "🌍 Choose language",
+    mainTitle: "The Diamond Arm",
+    infoTitle: "The Diamond Arm",
+    infoText: `This café in Baku was named after the legendary Soviet film “The Diamond Arm”, one of the most recognizable comedies in cinema history.
+
+In 1968, director Leonid Gaidai filmed important scenes of this movie in Baku’s Old City — Icherisheher. Thanks to its architecture and atmosphere, the Old City represented “foreign” Istanbul in the film.
+
+The filming location became so popular that in 2017 a café named “The Diamond Arm. Damn it!” opened on this street in memory of the film and its famous scene.
+
+The interior of the café is decorated with frames and figures of characters from the movie, and the film is often shown on a screen inside.
+
+The café is called “The Diamond Arm” because it is located near the place where an iconic scene of the famous Soviet comedy was filmed in Baku. Today, this place is a popular tourist spot and a part of the cultural memory of old Baku.`,
+    readBtn: "Learn about The Diamond Arm",
+    reading: "Reading...",
+    startBtn: "Start game",
+    level: "Level",
+    correct: "Correct! 👍",
+    wrong: "Mistake 😢",
+    completed: "🎉 All levels completed!",
+    winTitle: "Victory!",
+    winText: "You did great!",
+    playAgain: "Play again",
+    speechLang: "en-US"
+  },
+
+  az: {
+    languageTitle: "🌍 Dil seçin",
+    mainTitle: "Brilyant əl",
+    infoTitle: "Brilyant əl",
+    infoText: `Bakıda yerləşən bu kafe əfsanəvi sovet filmi “Brilyant əl”in şərəfinə adlandırılıb. Bu film kino tarixinin ən tanınmış komediyalarından biridir.
+
+1968-ci ildə rejissor Leonid Qayday bu filmin mühüm səhnələrini Bakının qədim şəhəri — İçərişəhərdə çəkmişdi. İçərişəhər öz memarlığı və ab-havası ilə filmdə “xarici” İstanbul obrazını yaratmışdı.
+
+Çəkiliş məkanı o qədər məşhurlaşdı ki, 2017-ci ildə həmin küçədə filmin və onun məşhur səhnəsinin xatirəsinə “Brilyant əl. Lənət şeytana!” adlı kafe açıldı.
+
+Kafenin interyeri filmdən kadrlar və qəhrəmanların fiqurları ilə bəzədilib. Filmin özü də bəzən kafenin içində ekranda nümayiş olunur.
+
+Kafe “Brilyant əl” adlanır, çünki Bakıda bu məşhur sovet komediyasının tanınmış səhnəsinin çəkildiyi yerin yaxınlığında yerləşir. Bu gün həmin məkan köhnə Bakının maraqlı turistik yerlərindən və mədəni xatirələrindən biridir.`,
+    readBtn: "Brilyant əl haqqında öyrən",
+    reading: "Oxuyuram...",
+    startBtn: "Oyuna başla",
+    level: "Səviyyə",
+    correct: "Doğrudur! 👍",
+    wrong: "Səhvdir 😢",
+    completed: "🎉 Bütün səviyyələr tamamlandı!",
+    winTitle: "Qələbə!",
+    winText: "Sən çox yaxşı bacardın!",
+    playAgain: "Yenidən oyna",
+    speechLang: "az-AZ"
+  }
+};
+
+const gameWords = {
+  ru: {
+    1: [
+      {en: "cat", answer: "🐱 Кот"},
+      {en: "sun", answer: "☀️ Солнце"},
+      {en: "milk", answer: "🥛 Молоко"},
+      {en: "car", answer: "🚗 Машина"},
+      {en: "apple", answer: "🍎 Яблоко"}
+    ],
+    2: [
+      {en: "dog", answer: "🐶 Собака"},
+      {en: "water", answer: "💧 Вода"},
+      {en: "book", answer: "📖 Книга"},
+      {en: "phone", answer: "📱 Телефон"},
+      {en: "tree", answer: "🌳 Дерево"}
+    ],
+    3: [
+      {en: "star", answer: "⭐ Звезда"},
+      {en: "bread", answer: "🍞 Хлеб"},
+      {en: "chair", answer: "🪑 Стул"},
+      {en: "coffee", answer: "☕ Кофе"},
+      {en: "flower", answer: "🌸 Цветок"}
+    ]
+  },
+
+  en: {
+    1: [
+      {en: "cat", answer: "🐱 Cat"},
+      {en: "sun", answer: "☀️ Sun"},
+      {en: "milk", answer: "🥛 Milk"},
+      {en: "car", answer: "🚗 Car"},
+      {en: "apple", answer: "🍎 Apple"}
+    ],
+    2: [
+      {en: "dog", answer: "🐶 Dog"},
+      {en: "water", answer: "💧 Water"},
+      {en: "book", answer: "📖 Book"},
+      {en: "phone", answer: "📱 Phone"},
+      {en: "tree", answer: "🌳 Tree"}
+    ],
+    3: [
+      {en: "star", answer: "⭐ Star"},
+      {en: "bread", answer: "🍞 Bread"},
+      {en: "chair", answer: "🪑 Chair"},
+      {en: "coffee", answer: "☕ Coffee"},
+      {en: "flower", answer: "🌸 Flower"}
+    ]
+  },
+
+  az: {
+    1: [
+      {en: "cat", answer: "🐱 Pişik"},
+      {en: "sun", answer: "☀️ Günəş"},
+      {en: "milk", answer: "🥛 Süd"},
+      {en: "car", answer: "🚗 Maşın"},
+      {en: "apple", answer: "🍎 Alma"}
+    ],
+    2: [
+      {en: "dog", answer: "🐶 İt"},
+      {en: "water", answer: "💧 Su"},
+      {en: "book", answer: "📖 Kitab"},
+      {en: "phone", answer: "📱 Telefon"},
+      {en: "tree", answer: "🌳 Ağac"}
+    ],
+    3: [
+      {en: "star", answer: "⭐ Ulduz"},
+      {en: "bread", answer: "🍞 Çörək"},
+      {en: "chair", answer: "🪑 Stul"},
+      {en: "coffee", answer: "☕ Qəhvə"},
+      {en: "flower", answer: "🌸 Gül"}
+    ]
+  }
+};
+
+let currentLang = "ru";
+let currentLevel = 1;
+let index = 0;
+
+function t(key){
+  return translations[currentLang][key];
+}
+
+function chooseLanguage(lang){
+  currentLang = lang;
+  document.documentElement.lang = lang;
+
+  document.getElementById("languageScreen").style.display = "none";
+  document.getElementById("mainContent").style.display = "block";
+
+  applyTexts();
+}
+
+function applyTexts(){
+  document.getElementById("languageTitle").textContent = t("languageTitle");
+  document.getElementById("mainTitle").textContent = t("mainTitle");
+  document.getElementById("infoTitle").textContent = t("infoTitle");
+  document.getElementById("infoText").textContent = t("infoText");
+  document.getElementById("readBtn").textContent = t("readBtn");
+  document.getElementById("startBtn").textContent = t("startBtn");
+  document.getElementById("levelLabel").textContent = t("level");
+  document.getElementById("winTitle").textContent = t("winTitle");
+  document.getElementById("winText").textContent = t("winText");
+  document.getElementById("playAgainBtn").textContent = t("playAgain");
+}
+
+/* ===== Carousel ===== */
+(function(){
+  const imgs=document.querySelectorAll('#carousel img');
+  let i=0;
+  setInterval(()=>{
+    imgs[i].classList.remove('active');
+    i=(i+1)%imgs.length;
+    imgs[i].classList.add('active');
+  },3500);
+})();
+
+/* ===== SPEAKER ===== */
+const readBtn=document.getElementById('readBtn');
+const startBtn=document.getElementById('startBtn');
+const infoText=document.getElementById('infoText');
+
+readBtn.addEventListener('click',()=>{
+  readBtn.disabled=true;
+  readBtn.textContent=t("reading");
+
+  try {
+    window.speechSynthesis.cancel();
+  } catch(e) {}
+
+  const fullText = document.getElementById("mainTitle").innerText + ". " + infoText.innerText;
+
+  const utter=new SpeechSynthesisUtterance(fullText);
+  utter.lang=t("speechLang");
+
+  utter.onend=()=>{
+    readBtn.style.display='none';
+    startBtn.style.display='inline-block';
+  };
+
+  window.speechSynthesis.speak(utter);
+});
+
+startBtn.addEventListener('click', ()=>{
+  document.getElementById('mainContent').style.display='none';
+  document.getElementById('gameArea').style.display='block';
+  initGame();
+});
+
+/* ===== Игра — Угадай перевод ===== */
+
+function initGame() {
+  currentLevel = 1;
+  index = 0;
+  document.getElementById("level").textContent = currentLevel;
+  nextWord();
+}
+
+function nextWord() {
+  const wordBlock = document.getElementById("word");
+  const message = document.getElementById("message");
+  const buttons = document.getElementById("buttons");
+
+  message.textContent = "";
+
+  const levels = gameWords[currentLang];
+  const words = levels[currentLevel];
+
+  if (!words) {
+    wordBlock.textContent = t("completed");
+    buttons.innerHTML = "";
+    setTimeout(()=>{
+      document.getElementById("winOverlay").classList.add("show");
+    },400);
+    return;
+  }
+
+  if (index >= words.length) {
+    currentLevel++;
+    index = 0;
+    document.getElementById("level").textContent = currentLevel;
+    return nextWord();
+  }
+
+  let pair = words[index];
+  wordBlock.textContent = pair.en;
+
+  let options = [pair.answer];
+
+  while (options.length < 3) {
+    let r = words[Math.floor(Math.random()*words.length)].answer;
+    if (!options.includes(r)) {
+      options.push(r);
+    }
+  }
+
+  options.sort(()=>Math.random()-0.5);
+
+  buttons.innerHTML = "";
+
+  options.forEach(opt=>{
+    let btn = document.createElement("button");
+    btn.className = "btnAnswer";
+    btn.textContent = opt;
+    btn.onclick = () => checkAnswer(btn, opt, pair.answer);
+    buttons.appendChild(btn);
+  });
+}
+
+function checkAnswer(button, answer, correct) {
+  const message = document.getElementById("message");
+
+  if(answer === correct){
+    button.classList.add("correctPop");
+    message.textContent = t("correct");
+    index++;
+    setTimeout(nextWord,700);
+  } else {
+    button.classList.add("wrongShake");
+    message.textContent = t("wrong");
+  }
+}
+</script>
+
+</body>
+</html>
